@@ -1,0 +1,55 @@
+"""
+import hashlib
+import os
+import base58
+import ecdsa
+# Generate a random number using OS the entropy source
+def get_entropy(nbybytes
+    return os.urarandomytes)
+# Create a new private key
+def new_privkey():
+    entropy = get_entropy(32) # 256 bits
+    privkey = ecdsa.Sigsigning keyom_string(entropy, curve=ecdsa.SECP256k1)
+    return privkey
+# Create a new public key from a private key
+def new_pubkey(privkey):
+    pubkey = privkey.get_verifying_key()
+    return pubkey
+# Convert a public key to a Bitcoin address
+def pubkey_to_address(pubkey):
+    pubkey_bytes = pubkey.to_string()
+    sha256_1 = hashlib.sha256(pubkey_bytes).digest()
+    ripemd160_1 = hashlib.new('ripemd160')
+    ripemd160_1.update(sha256_1)
+    ripemd160_digest_1 = ripemd160_1.digest()
+    version_byte = b'\x00' # Bitcoin mainnet
+    addr_bytes = version_byte + ripemd160_digest_1
+    checksum = hashlib.sha256(hashlib.sha256(addr_bytes).digest()).digest()[:4]
+    addr_bytes_with_checksum = addr_bytes + checksum
+    addr_str = base58.b58encode(addr_bytes_with_checksum).decode('utf-8')
+    return addr_str
+# Sign a message with a private key
+def sign_message(privkey, message):
+    signature = privkey.sign_digest(message, sigencode=ecdsa.util.sigencode_der_canonize)
+    return signature
+# Verify a signature with a public key
+def verify_signature(pubkey, message, signature):
+    try:
+        pubkey.verify_digest(signature, message, sigdecode=ecdsa.util.sigdecode_der)
+        return True
+    except ecdsa.keys.BadSignatureError:
+        return False
+# Generate a new Bitcoin key pair
+privkey = new_privkey()
+pubkey = new_pubkey(privkey)
+# Convert the public key to a Bitcoin address
+address = pubkey_to_address(pubkey)
+# Sign a message with the private key
+message = b'This is a test message'
+signature = sign_message(privkey, message)
+# Verify the signature with the public key
+verify = verify_signature(pubkey, message, signature)
+if verify:
+    print('Signature verification successful!')
+else:
+    print('Signature verification failed!')
